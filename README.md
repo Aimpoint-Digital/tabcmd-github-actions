@@ -140,7 +140,7 @@ Next we map the contents of the csv to a variable "added_modified_files".
 Lastly we loop through each value in added_modified_files. We wrangle the workbook name from the file path (assuming the workbook name will be the filename without the path and .twbx extension). Then we publish the workbook to the Tableau Server using the workbook name we just wrangled.
 
 ```yaml
-		  for added_modified_file in "${added_modified_files[@]}"; do
+          for added_modified_file in "${added_modified_files[@]}"; do
             workbook_name=$(echo "$added_modified_file" | rev | cut -d "/" -f 1 | rev)
 
             ./tabcmdpackage/opt/tableau/tabcmd/bin/tabcmd publish "${added_modified_file}" -n "$workbook_name" --project "My Project" --overwrite
