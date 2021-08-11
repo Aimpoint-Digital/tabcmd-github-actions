@@ -1,0 +1,42 @@
+# Example 2- Publish only added/modified workbooks in a specific directory
+# See README for explanation & walkthrough
+
+name: deploy-added-modified-workbooks
+on:
+  push:
+    branches:
+        - main
+    paths:
+      - 'Workbooks/**.twbx'
+
+jobs:
+  publish-to-tableau-server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.1.0
+      - id: files
+        uses: jitterbit/get-changed-files@v1
+        with:
+          format: 'csv'
+      
+      # Download and unpackage tabcmd
+      - run: sudo wget -O tableau-tabcmd.deb "${{ secrets.TABCMD_URL }}"
+      - run: sudo dpkg-deb -x ./tableau-tabcmd.deb ./tabcmdpackage/
+
+      # Accept Tableau EULA for tabcmd
+      - run: ./tabcmdpackage/opt/tableau/tabcmd/bin/tabcmd --accepteula
+
+      # Log in to Tableau Server with tabcmd
+      - run: ./tabcmdpackage/opt/tableau/tabcmd/bin/tabcmd login -s "${{ secrets.TABLEAU_HOST }}" -u "${{ secrets.TABLEAU_USERNAME }}" -p "${{ secrets.TABLEAU_PASSWORD }}"
+
+      # Handle added/modified files
+      - run: |
+          if [ ! -z "${{ steps.files.outputs.added_modified }}" ]
+          then
+          mapfile -d ',' -t added_modified_files < <(printf '%s,' '${{ steps.files.outputs.added_modified }}')
+          for added_modified_file in "${added_modified_files[@]}"; do
+            workbook_name=$(echo "$added_modified_file" | rev | cut -d "/" -f 1 | rev)
+
+            ./tabcmdpackage/opt/tableau/tabcmd/bin/tabcmd publish "${added_modified_file}" -n "$workbook_name" --project "My Project" --overwrite
+          done
+          fi

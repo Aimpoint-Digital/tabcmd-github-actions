@@ -1,0 +1,28 @@
+# Example 1 - Publish a specific Tableau workbook to Tableau Online/Server
+# See README for explanation & walkthrough
+
+name: deploy-tableau-workbook
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish-to-tableau-server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.1.0
+      
+      # Download and unpackage tabcmd
+      - run: sudo wget -O tableau-tabcmd.deb "${{ secrets.TABCMD_URL }}"
+      - run: sudo dpkg-deb -x ./tableau-tabcmd.deb ./tabcmdpackage/
+
+      # Accept Tableau EULA for tabcmd
+      - run: ./tabcmdpackage/opt/tableau/tabcmd/bin/tabcmd --accepteula
+
+      # Log in to Tableau Server with tabcmd
+      - run: ./tabcmdpackage/opt/tableau/tabcmd/bin/tabcmd login -s "${{ secrets.TABLEAU_HOST }}" -u "${{ secrets.TABLEAU_USERNAME }}" -p "${{ secrets.TABLEAU_PASSWORD }}"
+
+      # Publish workbook
+      - run: |
+            ./tabcmdpackage/opt/tableau/tabcmd/bin/tabcmd publish "my-tableau-workbook.twbx" -n "My Tableau Workbook" --project "My Project" --overwrite
