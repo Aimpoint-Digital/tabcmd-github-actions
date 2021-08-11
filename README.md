@@ -87,7 +87,6 @@ jobs:
         uses: jitterbit/get-changed-files@v1
         with:
           format: 'csv'
-
 ```
 
 
@@ -103,7 +102,6 @@ The following section is the same as Example 1, where we download and login to T
 
       # Log in to Tableau Server
       - run: ./tabcmdpackage/opt/tableau/tabcmd/bin/tabcmd login -s "${{ secrets.TABLEAU_HOST }}" -u "${{ secrets.TABLEAU_USERNAME }}" -p "${{ secrets.TABLEAU_PASSWORD }}"
-
 ```
 
 Lastly, we loop through the filepaths to the added/modified files that we stored in the csv (referenced by steps.files.output).
@@ -121,13 +119,12 @@ Lastly, we loop through the filepaths to the added/modified files that we stored
             ./tabcmdpackage/opt/tableau/tabcmd/bin/tabcmd publish "${added_modified_file}" -n "$workbook_name" --project "My Project" --overwrite
           done
           fi
-
-
 ```
 
 
 Drilling into this, the first line is just a catch that only runs the code if the csv is not empty (the jitterbit/get-changed-files@v1 action also collects information about renamed and deleted files, which could trigger the action, rendering the csv for added/modified files empty):
 
+```yaml
           if [ ! -z "${{ steps.files.outputs.added_modified }}" ]
           then
 ```
